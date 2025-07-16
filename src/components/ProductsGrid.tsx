@@ -14,7 +14,7 @@ interface ProductsGridProps {
 
 const ProductsGrid: React.FC<ProductsGridProps> = ({ filter }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 4;
 
   const { products, loading, error, pagination, refetch } = useProducts(
     itemsPerPage,

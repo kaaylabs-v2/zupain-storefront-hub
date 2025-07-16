@@ -9,6 +9,7 @@ import {
   ProductsResponse,
   ProductFilter
 } from '@/utils/graphql';
+import { off } from 'process';
 
 export const useProducts = (
   limit: number = 10,
@@ -36,7 +37,6 @@ export const useProducts = (
         offset,
         filter
       });
-      console.log("data", data);
 
       const transformedProducts =await data?.products?.data?.map((item: any) => ({
         id: item.product_uid,
@@ -54,7 +54,15 @@ export const useProducts = (
       console.log("transformedProducts", transformedProducts);
       
       setProducts(transformedProducts);
-      setPagination(1)
+      const pagination = data.products.pagination;
+      setPagination({
+        total: pagination.total,
+        limit: pagination.limit,
+        offset: offset,
+        //  pagination.offset,
+        hasNextPage: pagination?.hasNextPage,
+        hasPreviousPage: pagination?.hasPreviousPage
+      })
     //   (data.products.pagination);
     } catch (err) {
         console.log("err", err);

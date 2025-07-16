@@ -31,7 +31,7 @@ const ProductsTable = ({ className, filter }: ProductsTableProps) => {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4;
+  const itemsPerPage = 6;
 
   // Use GraphQL hook for data fetching
   const { products, loading, error, pagination, refetch } = useProducts(

@@ -1,8 +1,8 @@
 // GraphQL queries and types for product data
 
 export const GET_PRODUCTS = `
-query Products($limit: Int) {
-    products(limit: $limit) {
+query Products($limit: Int, $offset: Int) {
+    products(limit: $limit, offset: $offset) {
         tenant {
             name
             uid
@@ -16,6 +16,12 @@ query Products($limit: Int) {
                 product_image
                 product_uid
             }
+        }
+        pagination {
+            page
+            limit
+            total
+            totalPages
         }
     }
 }`
