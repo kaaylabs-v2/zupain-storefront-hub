@@ -1,177 +1,30 @@
 
 import React, { useState } from 'react';
-import { Edit, MoreHorizontal, Eye, Copy, Archive } from 'lucide-react';
+import { Edit, MoreHorizontal, Eye, Copy, Archive, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useProducts } from '@/hooks/useProducts';
+import { ProductFilter } from '@/utils/graphql';
 
-const ProductsGrid = () => {
+interface ProductsGridProps {
+  filter?: ProductFilter;
+}
+
+const ProductsGrid: React.FC<ProductsGridProps> = ({ filter }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  const allProducts = [
-    {
-      id: 1,
-      image: '/placeholder.svg',
-      name: 'Blameless Hydrating & Brightening Serum',
-      description: 'With Watermelon, Niacinamide & Lotus Extracts | For Oily, Acne-Prone & Congested Skin',
-      sku: 'BLS-HBS-50ML',
-      category: 'Skincare',
-      price: 999,
-      inventory: 145,
-      status: 'Active',
-      rating: 4.8,
-      orders: 234
-    },
-    {
-      id: 2,
-      image: '/placeholder.svg',
-      name: 'Blameless Oil Control + Brightening Serum',
-      description: 'Niacinamide, Multani Mitti, Hyaluronic Acid & Daisy Extract | Lightweight Gel',
-      sku: 'BLS-OCS-50ML',
-      category: 'Skincare',
-      price: 849,
-      inventory: 67,
-      status: 'Active',
-      rating: 4.6,
-      orders: 156
-    },
-    {
-      id: 3,
-      image: '/placeholder.svg',
-      name: 'Blameless Avocado + Green Tea Sunscreen SPF 50',
-      description: 'Silicon based Ultra-Matte Gel | Broad Spectrum, Blue Light & Infrared Protection',
-      sku: 'BLS-AGS-50ML',
-      category: 'Skincare',
-      price: 749,
-      inventory: 8,
-      status: 'Active',
-      rating: 4.9,
-      orders: 445
-    },
-    {
-      id: 4,
-      image: '/placeholder.svg',
-      name: 'Blameless Pore Refining & Acne Control Serum',
-      description: 'Salicylic Acid, Neem, Green Tea & Hibiscus | Lightweight Gel for Acne-Prone Skin',
-      sku: 'BLS-PRS-50ML',
-      category: 'Skincare',
-      price: 949,
-      inventory: 0,
-      status: 'Draft',
-      rating: 4.7,
-      orders: 89
-    },
-    {
-      id: 5,
-      image: '/placeholder.svg',
-      name: 'Vitanix Vitamin C Face Wash',
-      description: 'Brightening cleanser with natural vitamin C and gentle exfoliants',
-      sku: 'VTX-VCW-100ML',
-      category: 'Skincare',
-      price: 699,
-      inventory: 234,
-      status: 'Active',
-      rating: 4.5,
-      orders: 567
-    },
-    {
-      id: 6,
-      image: '/placeholder.svg',
-      name: 'Vitanix Collagen Booster Serum',
-      description: 'Anti-aging serum with peptides and hyaluronic acid',
-      sku: 'VTX-CBS-30ML',
-      category: 'Beauty',
-      price: 1299,
-      inventory: 89,
-      status: 'Active',
-      rating: 4.7,
-      orders: 123
-    },
-    {
-      id: 7,
-      image: '/placeholder.svg',
-      name: 'Herbal Glow Night Cream',
-      description: 'Nourishing night cream with natural herbs and botanical extracts',
-      sku: 'HG-NC-50ML',
-      category: 'Skincare',
-      price: 899,
-      inventory: 156,
-      status: 'Active',
-      rating: 4.4,
-      orders: 345
-    },
-    {
-      id: 8,
-      image: '/placeholder.svg',
-      name: 'Pure Essence Toner',
-      description: 'Alcohol-free toner with rose water and witch hazel',
-      sku: 'PE-T-200ML',
-      category: 'Skincare',
-      price: 549,
-      inventory: 78,
-      status: 'Active',
-      rating: 4.3,
-      orders: 234
-    },
-    {
-      id: 9,
-      image: '/placeholder.svg',
-      name: 'Omega-3 Fish Oil Capsules',
-      description: 'High-strength omega-3 fatty acids for heart and brain health',
-      sku: 'O3-FO-60CAP',
-      category: 'Supplements',
-      price: 1199,
-      inventory: 267,
-      status: 'Active',
-      rating: 4.6,
-      orders: 678
-    },
-    {
-      id: 10,
-      image: '/placeholder.svg',
-      name: 'Multivitamin Complex',
-      description: 'Complete daily nutrition with 25 essential vitamins and minerals',
-      sku: 'MV-C-90TAB',
-      category: 'Supplements',
-      price: 799,
-      inventory: 45,
-      status: 'Active',
-      rating: 4.5,
-      orders: 456
-    },
-    {
-      id: 11,
-      image: '/placeholder.svg',
-      name: 'Green Tea Extract',
-      description: 'Antioxidant-rich supplement for metabolism and energy',
-      sku: 'GTE-60CAP',
-      category: 'Wellness',
-      price: 649,
-      inventory: 123,
-      status: 'Active',
-      rating: 4.2,
-      orders: 189
-    },
-    {
-      id: 12,
-      image: '/placeholder.svg',
-      name: 'Probiotics Daily',
-      description: '10 billion CFU probiotic blend for digestive health',
-      sku: 'PD-30CAP',
-      category: 'Wellness',
-      price: 1049,
-      inventory: 89,
-      status: 'Active',
-      rating: 4.8,
-      orders: 234
-    }
-  ];
+  const { products, loading, error, pagination, refetch } = useProducts(
+    itemsPerPage,
+    (currentPage - 1) * itemsPerPage,
+    filter
+  );
 
-  const totalPages = Math.ceil(allProducts.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentProducts = allProducts.slice(startIndex, endIndex);
+  console.log("products", products);
+
+  const totalPages = Math.ceil(pagination.total / itemsPerPage);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -194,16 +47,71 @@ const ProductsGrid = () => {
 
   const formatPrice = (price: number) => `₹${price}.00`;
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white rounded-lg border p-8 flex items-center justify-center">
+          <div className="flex items-center space-x-2">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span className="text-gray-600">Loading products...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Alert className="bg-red-50 border-red-200">
+          <AlertDescription className="text-red-800">
+            Error loading products: {error}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={refetch}
+              className="ml-2"
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  // Empty state
+  if (products.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white rounded-lg border p-8 text-center">
+          <p className="text-gray-500">No products found.</p>
+          <Button 
+            variant="outline" 
+            onClick={refetch}
+            className="mt-4"
+          >
+            Refresh
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {currentProducts.map((product) => {
+        {products.map((product) => {
           const inventoryStatus = getInventoryStatus(product.inventory);
+          const primaryImage = product.image || '/placeholder.svg';
+          
           return (
             <div key={product.id} className="bg-white rounded-lg border p-4 hover:shadow-md transition-shadow">
               <div className="relative">
                 <img 
-                  src={product.image} 
+                  src={primaryImage} 
                   alt={product.name}
                   className="w-full h-48 rounded-lg object-cover border mb-4"
                 />
@@ -266,56 +174,62 @@ const ProductsGrid = () => {
                   </div>
                   <span className="text-sm text-gray-600">{product.orders} orders</span>
                 </div>
+                
+                <div className="text-xs text-gray-500">
+                  <span className="font-medium">Category:</span> {product?.category?.name}
+                </div>
               </div>
             </div>
           );
         })}
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-600">
-          Showing {startIndex + 1} to {Math.min(endIndex, allProducts.length)} of {allProducts.length} products
-        </div>
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious 
-                href="#" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (currentPage > 1) handlePageChange(currentPage - 1);
-                }}
-                className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-              />
-            </PaginationItem>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <PaginationItem key={page}>
-                <PaginationLink 
+      {pagination.total > 0 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            Showing {pagination.offset + 1} to {Math.min(pagination.offset + pagination.limit, pagination.total)} of {pagination.total} products
+          </div>
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
                   href="#" 
-                  isActive={currentPage === page}
                   onClick={(e) => {
                     e.preventDefault();
-                    handlePageChange(page);
+                    if (pagination.hasPreviousPage) handlePageChange(currentPage - 1);
                   }}
-                  className="cursor-pointer"
-                >
-                  {page}
-                </PaginationLink>
+                  className={!pagination.hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
               </PaginationItem>
-            ))}
-            <PaginationItem>
-              <PaginationNext 
-                href="#" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (currentPage < totalPages) handlePageChange(currentPage + 1);
-                }}
-                className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink 
+                    href="#" 
+                    isActive={currentPage === page}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(page);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext 
+                  href="#" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (pagination.hasNextPage) handlePageChange(currentPage + 1);
+                  }}
+                  className={!pagination.hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 };
