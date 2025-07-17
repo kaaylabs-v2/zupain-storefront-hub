@@ -27,7 +27,52 @@ export const useProducts = (
     hasPreviousPage: false
   });
 
-  const fetchProducts = async () => {
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const data: ProductsResponse = await graphqlRequest(GET_PRODUCTS, {
+          limit,
+          offset,
+          filter
+        });
+
+        const transformedProducts = await data?.products?.data?.map((item: any) => ({
+          id: item.product_uid,
+          image: item?.images?.[0]?.product_image || '/placeholder.svg',
+          name: item?.product_name,
+          description: item?.description,
+          sku: item?.product_code,
+          category: {name:item?.category?.category_name},
+          price: item?.price,
+          inventory: item?.track_inventory,
+          status: item?.product_status === true ? "Active" : "Draft",
+          rating: item?.rating,
+          orders: item.orders || 10,
+        }));
+        
+        setProducts(transformedProducts);
+        const pagination = data.products.pagination;
+        setPagination({
+          total: pagination.total,
+          limit: pagination.limit,
+          offset: offset,
+          hasNextPage: pagination?.hasNextPage,
+          hasPreviousPage: pagination?.hasPreviousPage
+        })
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [limit, offset, filter]);
+
+  const refetch = async () => {
     setLoading(true);
     setError(null);
     
@@ -38,7 +83,7 @@ export const useProducts = (
         filter
       });
 
-      const transformedProducts =await data?.products?.data?.map((item: any) => ({
+      const transformedProducts = await data?.products?.data?.map((item: any) => ({
         id: item.product_uid,
         image: item?.images?.[0]?.product_image || '/placeholder.svg',
         name: item?.product_name,
@@ -51,7 +96,6 @@ export const useProducts = (
         rating: item?.rating,
         orders: item.orders || 10,
       }));
-      console.log("transformedProducts", transformedProducts);
       
       setProducts(transformedProducts);
       const pagination = data.products.pagination;
@@ -59,25 +103,14 @@ export const useProducts = (
         total: pagination.total,
         limit: pagination.limit,
         offset: offset,
-        //  pagination.offset,
         hasNextPage: pagination?.hasNextPage,
         hasPreviousPage: pagination?.hasPreviousPage
       })
-    //   (data.products.pagination);
     } catch (err) {
-        console.log("err", err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchProducts();
-  }, [limit, offset, filter]);
-
-  const refetch = () => {
-    fetchProducts();
   };
 
   return {
