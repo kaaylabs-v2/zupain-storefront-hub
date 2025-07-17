@@ -24,7 +24,7 @@ import WhatsApp from "./pages/WhatsApp";
 import PageBuilder from "./pages/PageBuilder";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-import Login from "./pages/Login-1";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
