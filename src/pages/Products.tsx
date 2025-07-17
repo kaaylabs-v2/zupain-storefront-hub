@@ -1,40 +1,38 @@
 
 import React, { useState } from 'react';
-import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
+import Layout from '@/components/Layout';
 import ProductsHeader from '@/components/ProductsHeader';
 import ProductsFilters from '@/components/ProductsFilters';
 import ProductsTable from '@/components/ProductsTable';
 import ProductsGrid from '@/components/ProductsGrid';
-import { useTheme } from '@/contexts/ThemeContext';
+import ProductsSidebar from '@/components/ProductsSidebar';
 
 const Products = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const { currentPalette } = useTheme();
-
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
 
   const handleViewModeChange = (mode: 'grid' | 'list') => {
     setViewMode(mode);
   };
 
   return (
-    <div className={`flex min-h-screen ${currentPalette.background}`}>
-      <Sidebar isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
-      
-      <div className="flex-1 flex flex-col">
-        <Header onToggleSidebar={toggleSidebar} />
+    <Layout>
+      <div className="space-y-4">
+        <ProductsHeader />
         
-        <main className="flex-1 p-6 space-y-6">
-          <ProductsHeader />
-          <ProductsFilters viewMode={viewMode} onViewModeChange={handleViewModeChange} />
-          {viewMode === 'list' ? <ProductsTable /> : <ProductsGrid />}
-        </main>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          {/* Left section - Product filters and data */}
+          <div className="lg:col-span-3 space-y-4">
+            <ProductsFilters viewMode={viewMode} onViewModeChange={handleViewModeChange} />
+            {viewMode === 'list' ? <ProductsTable /> : <ProductsGrid />}
+          </div>
+          
+          {/* Right section - Sidebar */}
+          <div className="lg:col-span-1">
+            <ProductsSidebar />
+          </div>
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 

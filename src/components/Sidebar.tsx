@@ -19,6 +19,7 @@ import {
   X
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -82,10 +83,97 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, isMobileMenuOp
     }
   };
 
+  // Rail Navigation Style - Clean and minimal
+  if (isCollapsed && window.innerWidth >= 1024) {
+    return (
+      <div className="w-16 min-h-screen bg-slate-900 border-r border-slate-800 flex flex-col">
+        {/* Logo */}
+        <div className="h-16 flex items-center justify-center border-b border-slate-800">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <Store className="w-5 h-5 text-white" />
+          </div>
+        </div>
+
+        {/* Navigation Rail */}
+        <nav className="flex-1 py-4">
+          <div className="space-y-1">
+            {menuItems.filter(item => !item.hasSubmenu).map((item, index) => (
+              <NavLink
+                key={index}
+                to={item.path}
+                className={({ isActive }) =>
+                  `relative group flex items-center justify-center h-12 mx-2 rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`
+                }
+              >
+                <item.icon className="w-5 h-5" />
+                
+                {/* Hover label */}
+                <div className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-lg border border-slate-700">
+                  {item.label}
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-slate-800"></div>
+                </div>
+              </NavLink>
+            ))}
+
+            {/* Page Builder with expandable submenu */}
+            {menuItems.filter(item => item.hasSubmenu).map((item, index) => (
+              <div key={index} className="relative group">
+                <div
+                  className={`flex items-center justify-center h-12 mx-2 rounded-lg transition-all duration-200 cursor-pointer ${
+                    isPathActive(item.path)
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <item.icon className="w-5 h-5" />
+                </div>
+
+                {/* Expandable submenu panel */}
+                <div className="absolute left-full top-0 ml-3 w-56 bg-slate-800 rounded-lg shadow-xl border border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="p-3">
+                    <div className="text-sm font-medium text-white mb-3">{item.label}</div>
+                    <div className="space-y-1">
+                      {item.submenu?.map((subItem: any, subIndex: number) => (
+                        <NavLink
+                          key={subIndex}
+                          to={subItem.path}
+                          onClick={handleNavClick}
+                          className={({ isActive }) =>
+                            `block px-3 py-2 text-sm rounded-md transition-colors ${
+                              isActive
+                                ? 'bg-blue-600 text-white'
+                                : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                            }`
+                          }
+                        >
+                          {subItem.label}
+                        </NavLink>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Arrow pointer */}
+                  <div className="absolute left-0 top-6 -translate-x-1 border-4 border-transparent border-r-slate-800"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </nav>
+
+        {/* Footer indicator */}
+        <div className="h-16 flex items-center justify-center border-t border-slate-800">
+          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Regular expanded sidebar
   return (
-    <div className={`${currentPalette.sidebar} ${currentPalette.sidebarText} transition-all duration-300 ${
-      isCollapsed && window.innerWidth >= 1024 ? 'w-16' : 'w-64'
-    } min-h-screen flex flex-col relative`}>
+    <div className={`${currentPalette.sidebar} ${currentPalette.sidebarText} transition-all duration-300 w-64 min-h-screen flex flex-col relative`}>
       
       {/* Mobile close button */}
       <button
@@ -98,15 +186,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, isMobileMenuOp
       {/* Logo Section */}
       <div className="p-4 border-b border-slate-700">
         <div className="flex items-center space-x-3">
-          <div className={`${isCollapsed && window.innerWidth >= 1024 ? 'w-8 h-8' : 'w-10 h-10'} ${currentPalette.accent} rounded-lg flex items-center justify-center flex-shrink-0`}>
-            <Store className={logoIconSize} />
+          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Store className="w-6 h-6" />
           </div>
-          {!(isCollapsed && window.innerWidth >= 1024) && (
-            <div className="min-w-0">
-              <h2 className="text-sm font-semibold truncate">Vitanix consumer</h2>
-              <p className="text-xs text-slate-400 truncate">private limited</p>
-            </div>
-          )}
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold truncate">Vitanix consumer</h2>
+            <p className="text-xs text-slate-400 truncate">private limited</p>
+          </div>
         </div>
       </div>
 
@@ -117,30 +203,27 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, isMobileMenuOp
             <li key={index}>
               {item.hasSubmenu ? (
                 <div>
-                  {/* Main Menu Item */}
                   <div
                     className={`flex items-center justify-between px-2 sm:px-3 py-2 rounded-lg cursor-pointer transition-colors ${
                       isPathActive(item.path)
                         ? `${currentPalette.primary} text-white`
                         : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                     }`}
-                    onClick={() => !(isCollapsed && window.innerWidth >= 1024) && toggleMenu(item.key!)}
+                    onClick={() => toggleMenu(item.key!)}
                   >
                     <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
                       <item.icon className={iconSize} />
-                      {!(isCollapsed && window.innerWidth >= 1024) && <span className="text-xs sm:text-sm truncate">{item.label}</span>}
+                      <span className="text-xs sm:text-sm truncate">{item.label}</span>
                     </div>
-                    {!(isCollapsed && window.innerWidth >= 1024) && (
-                      isMenuExpanded(item.key!) ? 
-                        <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" /> : 
-                        <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                    )}
+                    {isMenuExpanded(item.key!) ? 
+                      <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" /> : 
+                      <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                    }
                   </div>
                   
-                  {/* Submenu */}
-                  {!(isCollapsed && window.innerWidth >= 1024) && isMenuExpanded(item.key!) && item.submenu && (
+                  {isMenuExpanded(item.key!) && item.submenu && (
                     <ul className="ml-6 sm:ml-8 mt-1 sm:mt-2 space-y-1">
-                      {item.submenu.map((subItem, subIndex) => (
+                      {item.submenu.map((subItem: any, subIndex: number) => (
                         <li key={subIndex}>
                           <NavLink
                             to={subItem.path}
@@ -173,7 +256,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, isMobileMenuOp
                   }
                 >
                   <item.icon className={iconSize} />
-                  {!(isCollapsed && window.innerWidth >= 1024) && <span className="text-xs sm:text-sm truncate">{item.label}</span>}
+                  <span className="text-xs sm:text-sm truncate">{item.label}</span>
                 </NavLink>
               )}
             </li>

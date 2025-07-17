@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Menu, Bell, Search, User, Globe, Wallet, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ThemeSettings from './ThemeSettings';
@@ -62,7 +63,12 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
             <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
 
-          <Button variant="ghost" size="sm" className="p-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="p-2"
+            onClick={() => navigate('/profile')}
+          >
             <User className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
 

@@ -9,6 +9,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PublicRoute from "@/components/PublicRoute";
 import Index from "./pages/Index";
+// import Login from "./pages/Login";
+import Profile from "./pages/Profile";
 import Orders from "./pages/Orders";
 import ShiprocketOrders from "./pages/ShiprocketOrders";
 import Products from "./pages/Products";
