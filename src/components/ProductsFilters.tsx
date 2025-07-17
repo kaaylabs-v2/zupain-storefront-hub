@@ -19,11 +19,11 @@ const ProductsFilters = ({ viewMode, onViewModeChange }: ProductsFiltersProps) =
       <div className="flex items-center justify-between bg-white p-4 rounded-lg border">
         <div className="flex items-center space-x-4">
           <Tabs defaultValue="all" className="w-auto">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="all" className="text-xs">All Products</TabsTrigger>
-              <TabsTrigger value="active" className="text-xs">Active</TabsTrigger>
-              <TabsTrigger value="draft" className="text-xs">Draft</TabsTrigger>
-              <TabsTrigger value="archived" className="text-xs">Archived</TabsTrigger>
+            <TabsList className="grid grid-cols-2 sm:grid-cols-4 h-8 p-0.5">
+              <TabsTrigger value="all" className="text-xs px-2 py-1 h-7">All Products</TabsTrigger>
+              <TabsTrigger value="active" className="text-xs px-2 py-1 h-7">Active</TabsTrigger>
+              <TabsTrigger value="draft" className="text-xs px-2 py-1 h-7">Draft</TabsTrigger>
+              <TabsTrigger value="archived" className="text-xs px-2 py-1 h-7">Archived</TabsTrigger>
             </TabsList>
           </Tabs>
           

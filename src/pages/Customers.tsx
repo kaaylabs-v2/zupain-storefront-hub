@@ -1,30 +1,33 @@
 
 import React, { useState } from 'react';
-import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
+import Layout from '@/components/Layout';
 import CustomersHeader from '@/components/CustomersHeader';
-import { useTheme } from '@/contexts/ThemeContext';
+import TopCustomersStats from '@/components/TopCustomersStats';
+import CustomersFiltersControls from '@/components/CustomersFiltersControls';
+import CustomersContent from '@/components/CustomersContent';
 
 const Customers = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { currentPalette } = useTheme();
-
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
-
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   return (
-    <div className={`flex min-h-screen ${currentPalette.background}`}>
-      <Sidebar isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
-      
-      <div className="flex-1 flex flex-col">
-        <Header onToggleSidebar={toggleSidebar} />
+    <Layout>
+      <div className="space-y-4">
+        <CustomersHeader />
         
-        <main className="flex-1 p-6">
-          <CustomersHeader />
-        </main>
+        {/* Main horizontal layout to minimize scroll */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          {/* Left section - Customer data and stats */}
+          <div className="xl:col-span-2 space-y-4">
+            <CustomersFiltersControls viewMode={viewMode} setViewMode={setViewMode} />
+            <CustomersContent viewMode={viewMode} />
+          </div>
+          
+          {/* Right section - Top customers and stats sidebar */}
+          <div className="xl:col-span-1">
+            <TopCustomersStats />
+          </div>
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 
