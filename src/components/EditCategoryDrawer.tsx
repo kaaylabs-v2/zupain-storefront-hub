@@ -6,17 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, ChevronRight, ChevronDown, Plus, Trash2, X } from 'lucide-react';
+import { Upload, ChevronRight, ChevronDown, Plus, Trash2, X, Loader2 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useCategoryMutations } from '@/hooks/useCategoryMutations';
+import { CreateCategoryInput, UpdateCategoryInput, Category } from '@/utils/graphql';
+import { toast } from '@/hooks/use-toast';
 
-interface Category {
-  id: string;
-  name: string;
-  status: boolean;
-  products: number;
-  image: string;
-}
+
 
 interface EditCategoryDrawerProps {
   isOpen: boolean;
@@ -33,10 +30,12 @@ interface Attribute {
 
 const EditCategoryDrawer = ({ isOpen, onClose, category, onSave }: EditCategoryDrawerProps) => {
   const { currentPalette } = useTheme();
+  const { createCategory, updateCategory, loading, error } = useCategoryMutations();
+  
   const [categoryName, setCategoryName] = useState(category?.name || '');
   const [isBannerExpanded, setIsBannerExpanded] = useState(false);
-  const [bannerTitle, setBannerTitle] = useState('');
-  const [bannerDescription, setBannerDescription] = useState('');
+  const [bannerTitle, setBannerTitle] = useState(category?.banner_title || '');
+  const [bannerDescription, setBannerDescription] = useState(category?.banner_description || '');
   const [isAttributesExpanded, setIsAttributesExpanded] = useState(false);
   const [isSEOExpanded, setIsSEOExpanded] = useState(false);
   
@@ -50,20 +49,104 @@ const EditCategoryDrawer = ({ isOpen, onClose, category, onSave }: EditCategoryD
   const [seoMetaDescription, setSeoMetaDescription] = useState('');
   const [seoCategoryUrlHandle, setSeoCategoryUrlHandle] = useState('');
 
+  // Determine if this is create or edit mode
+  const isEditMode = !!category;
+
   React.useEffect(() => {
     if (category) {
       setCategoryName(category.name);
+      setBannerTitle(category.banner_title || '');
+      setBannerDescription(category.banner_description || '');
+      setSeoPageTitle(category.seo_page_title || '');
+      setSeoMetaDescription(category.seo_meta_description || '');
+      setSeoCategoryUrlHandle(category.seo_url_handle || '');
+    } else {
+      // Reset form for create mode
+      setCategoryName('');
+      setBannerTitle('');
+      setBannerDescription('');
+      setAttributes([]);
+      setSeoPageTitle('');
+      setSeoMetaDescription('');
+      setSeoCategoryUrlHandle('');
     }
   }, [category]);
 
-  const handleSave = () => {
-    if (category) {
-      onSave({
-        ...category,
-        name: categoryName
+  const validateForm = () => {
+    const errors: string[] = [];
+
+    if (!categoryName.trim()) {
+      errors.push('Category name is required');
+    }
+
+    if (categoryName.length > 100) {
+      errors.push('Category name must be less than 100 characters');
+    }
+
+    return errors;
+  };
+
+  const handleSave = async () => {
+    const errors = validateForm();
+    if (errors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: errors.join(', '),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      if (isEditMode && category) {
+        // Update existing category
+        const updateInput: UpdateCategoryInput = {
+          category_name: categoryName,
+          banner_title: bannerTitle,
+          banner_description: bannerDescription,
+          seo_page_title: seoPageTitle,
+          seo_meta_description: seoMetaDescription,
+          seo_url_handle: seoCategoryUrlHandle,
+        };
+
+        const updatedCategory = await updateCategory(category.id, updateInput);
+        if (updatedCategory) {
+          onSave(updatedCategory);
+          toast({
+            title: "Success",
+            description: "Category updated successfully",
+          });
+          onClose();
+        }
+      } else {
+        // Create new category
+        const createInput: CreateCategoryInput = {
+          category_name: categoryName,
+          is_active: true, // Default to active
+          banner_title: bannerTitle,
+          banner_description: bannerDescription,
+          seo_page_title: seoPageTitle,
+          seo_meta_description: seoMetaDescription,
+          seo_url_handle: seoCategoryUrlHandle,
+        };
+        console.log("createInput", createInput);
+        const newCategory = await createCategory(createInput);
+        if (newCategory) {
+          onSave(newCategory);
+          toast({
+            title: "Success",
+            description: "Category created successfully",
+          });
+          onClose();
+        }
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: error || "Failed to save category",
+        variant: "destructive",
       });
     }
-    onClose();
   };
 
   const handleCancel = () => {
@@ -108,7 +191,9 @@ const EditCategoryDrawer = ({ isOpen, onClose, category, onSave }: EditCategoryD
             <Button variant="ghost" size="sm" onClick={onClose} className="p-1">
               <X className="w-5 h-5" />
             </Button>
-            <h2 className="text-lg font-semibold text-gray-900">Edit Category</h2>
+            <h2 className="text-lg font-semibold text-gray-900">
+              {isEditMode ? 'Edit Category' : 'Add Category'}
+            </h2>
           </div>
         </div>
 
@@ -222,7 +307,7 @@ const EditCategoryDrawer = ({ isOpen, onClose, category, onSave }: EditCategoryD
                 )}
               </div>
               
-              {/* Add Attributes Section */}
+              {/* 
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <button 
                   className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
@@ -238,7 +323,6 @@ const EditCategoryDrawer = ({ isOpen, onClose, category, onSave }: EditCategoryD
                 
                 {isAttributesExpanded && (
                   <div className="border-t bg-gray-50 p-6 space-y-6">
-                    {/* Add Attribute Form */}
                     <div className="grid grid-cols-1 gap-4">
                       <div>
                         <Label className="text-sm font-medium text-gray-700 mb-2 block">
@@ -278,7 +362,6 @@ const EditCategoryDrawer = ({ isOpen, onClose, category, onSave }: EditCategoryD
                       Add Attribute
                     </Button>
 
-                    {/* Attributes List */}
                     {attributes.length > 0 && (
                       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                         <div className="grid grid-cols-3 gap-4 px-4 py-3 bg-gray-50 border-b text-sm font-medium text-gray-700">
@@ -314,6 +397,7 @@ const EditCategoryDrawer = ({ isOpen, onClose, category, onSave }: EditCategoryD
                   </div>
                 )}
               </div>
+              */}
               
               {/* SEO Section */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -399,9 +483,17 @@ const EditCategoryDrawer = ({ isOpen, onClose, category, onSave }: EditCategoryD
             </Button>
             <Button 
               onClick={handleSave}
+              disabled={loading}
               className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white"
             >
-              Save
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {isEditMode ? 'Updating...' : 'Creating...'}
+                </>
+              ) : (
+                isEditMode ? 'Update' : 'Create'
+              )}
             </Button>
           </div>
         </div>

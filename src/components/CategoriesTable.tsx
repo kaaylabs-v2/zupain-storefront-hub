@@ -10,7 +10,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Edit, Eye, Trash2, Loader2 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCategories } from '@/hooks/useCategories';
+import { useCategoryMutations } from '@/hooks/useCategoryMutations';
 import { Category, CategoryFilter } from '@/utils/graphql';
+import { toast } from '@/hooks/use-toast';
 import EditCategoryDrawer from './EditCategoryDrawer';
 
 interface CategoriesTableProps {
@@ -20,6 +22,7 @@ interface CategoriesTableProps {
 
 const CategoriesTable = ({ className, filter }: CategoriesTableProps) => {
   const { currentPalette } = useTheme();
+  const { deleteCategory } = useCategoryMutations();
   
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
@@ -87,18 +90,37 @@ const CategoriesTable = ({ className, filter }: CategoriesTableProps) => {
     setIsEditDrawerOpen(true);
   };
 
-  const handleSaveCategory = (updatedCategory: Category) => {
-    // TODO: Implement GraphQL mutation for updating category
+  const handleSaveCategory = async (updatedCategory: Category) => {
     console.log('Save category:', updatedCategory);
     // Refetch to get updated data
-    refetch();
+    await refetch();
   };
 
-  const handleDeleteCategory = (id: string) => {
+  const handleDeleteCategory = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
-      // TODO: Implement GraphQL mutation for deleting category
-      console.log('Delete category:', id);
-      refetch();
+      try {
+        const {success, message} = await deleteCategory(id);
+        console.log("success", success);
+        if (success === true) {
+          toast({
+            title: "Success",
+            description: "Category deleted successfully",
+          });
+          refetch();
+        } else {
+          toast({
+            title: "Error",
+            description: message || "Failed to delete category",
+            variant: "destructive",
+          });
+        }
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to delete category",
+          variant: "destructive",
+        });
+      }
     }
   };
 

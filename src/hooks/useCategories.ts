@@ -45,6 +45,11 @@ export const useCategories = (
           id: item.category_uid,
           name: item?.category_name,
           status: item?.is_active === true,
+          banner_title: item?.banner_title,
+          banner_description: item?.banner_description,
+          seo_page_title: item?.seo_page_title,
+          seo_meta_description: item?.seo_meta_description,
+          seo_url_handle: item?.seo_url_handle,
           products: item?.products_count || 0, // Default since product_count is not available
           image: item?.banner_image || '👤',
           createdAt: item?.creation_date,
@@ -52,6 +57,8 @@ export const useCategories = (
         }));
         
         setCategories(transformedCategories);
+        console.log("transformedCategories------->", data);
+
         const paginationData = data.categories.pagination;
         setPagination({
           total: paginationData.total,
@@ -88,6 +95,11 @@ export const useCategories = (
         id: item.category_uid,
         name: item?.category_name,
         status: item?.is_active === true,
+        banner_title: item?.banner_title,
+        banner_description: item?.banner_description,
+        seo_page_title: item?.seo_page_title,
+        seo_meta_description: item?.seo_meta_description,
+        seo_url_handle: item?.seo_url_handle,
         products: item?.products_count || 0, // Default since product_count is not available
         image: item?.banner_image || '👤',
         createdAt: item?.creation_date,

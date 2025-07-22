@@ -17,7 +17,9 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Edit, Eye, Trash2, ShoppingBag, Sparkles, MoreHorizontal, MapPin, Phone, Loader2 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCategories } from '@/hooks/useCategories';
+import { useCategoryMutations } from '@/hooks/useCategoryMutations';
 import { Category, CategoryFilter } from '@/utils/graphql';
+import { toast } from '@/hooks/use-toast';
 import EditCategoryDrawer from './EditCategoryDrawer';
 import {
   DropdownMenu,
@@ -33,6 +35,7 @@ interface CategoriesGridProps {
 
 const CategoriesGrid = ({ className, filter }: CategoriesGridProps) => {
   const { currentPalette } = useTheme();
+  const { deleteCategory } = useCategoryMutations();
   
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
@@ -93,18 +96,30 @@ const CategoriesGrid = ({ className, filter }: CategoriesGridProps) => {
     setIsEditDrawerOpen(true);
   };
 
-  const handleSaveCategory = (updatedCategory: Category) => {
-    // TODO: Implement GraphQL mutation for updating category
+  const handleSaveCategory = async (updatedCategory: Category) => {
     console.log('Save category:', updatedCategory);
     // Refetch to get updated data
-    refetch();
+    await refetch();
   };
 
-  const handleDeleteCategory = (id: string) => {
+  const handleDeleteCategory = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
-      // TODO: Implement GraphQL mutation for deleting category
-      console.log('Delete category:', id);
-      refetch();
+      try {
+        const success = await deleteCategory(id);
+        if (success) {
+          toast({
+            title: "Success",
+            description: "Category deleted successfully",
+          });
+          refetch();
+        }
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to delete category",
+          variant: "destructive",
+        });
+      }
     }
   };
 

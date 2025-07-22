@@ -18,9 +18,10 @@ const CategoriesHeader = () => {
     setIsAddCategoryOpen(true);
   };
 
-  const handleSaveCategory = (category: any) => {
+  const handleSaveCategory = async (category: any) => {
     console.log('Saving category:', category);
-    // Here you would typically handle the category save logic
+    // Refetch categories to get updated data
+    // The refetch will be handled by the parent component or category list
     setIsAddCategoryOpen(false);
   };
 

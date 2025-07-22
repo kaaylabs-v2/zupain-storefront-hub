@@ -486,6 +486,11 @@ export const GET_CATEGORIES = `
         category_uid
         category_name
         is_active
+        banner_title
+        banner_description
+        seo_page_title
+        seo_meta_description
+        seo_url_handle
         banner_image
         creation_date
         modified_date
@@ -574,6 +579,32 @@ export const SEARCH_CATEGORIES = `
   }
 `;
 
+// Category Mutations
+export const CREATE_CATEGORY = `
+  mutation CreateCategory($input: CreateCategoryInput!) {
+    createCategory(input: $input) {
+      success      
+    }
+  }
+`;
+
+export const UPDATE_CATEGORY = `
+  mutation UpdateCategory($id: String!, $input: UpdateCategoryInput!) {
+    updateCategory(id: $id, input: $input) {
+     success
+    }
+  }
+`;
+
+export const DELETE_CATEGORY = `
+  mutation DeleteCategory($id: String!) {
+    deleteCategory(id: $id) {
+      success
+      message
+    }
+  }
+`;
+
 // Category types
 export interface Category {
   id: string;
@@ -582,6 +613,11 @@ export interface Category {
   products: number;
   image: string;
   description?: string;
+  banner_title?: string;
+  banner_description?: string;
+  seo_page_title?: string;
+  seo_meta_description?: string;
+  seo_url_handle?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -603,4 +639,27 @@ export interface CategoryFilter {
   name?: string;
   type?: string;
   searchQuery?: string;
+}
+
+// Category Input Types
+export interface CreateCategoryInput {
+  category_name: string;
+  is_active?: boolean;
+  banner_image?: string;
+  banner_title?: string;
+  banner_description?: string;
+  seo_page_title?: string;
+  seo_meta_description?: string;
+  seo_url_handle?: string;
+}
+
+export interface UpdateCategoryInput {
+  category_name?: string;
+  is_active?: boolean;
+  banner_image?: string;
+  banner_title?: string;
+  banner_description?: string;
+  seo_page_title?: string;
+  seo_meta_description?: string;
+  seo_url_handle?: string;
 } 
