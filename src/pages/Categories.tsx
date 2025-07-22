@@ -7,10 +7,21 @@ import CategoriesFilters from '@/components/CategoriesFilters';
 import CategoriesTable from '@/components/CategoriesTable';
 import CategoriesGrid from '@/components/CategoriesGrid';
 import { useTheme } from '@/contexts/ThemeContext';
+import { CategoryFilter } from '@/utils/graphql';
+
+/**
+ * Categories Page with GraphQL Filtering
+ * 
+ * Features:
+ * - Manages filter state for categories
+ * - Supports both grid and table view modes
+ * - Passes filters to child components for GraphQL integration
+ */
 
 const Categories = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [currentFilter, setCurrentFilter] = useState<CategoryFilter>({});
   const { currentPalette } = useTheme();
 
   const toggleSidebar = () => {
@@ -19,6 +30,11 @@ const Categories = () => {
 
   const handleViewModeChange = (mode: 'grid' | 'list') => {
     setViewMode(mode);
+  };
+
+  const handleFilterChange = (filter: CategoryFilter) => {
+    console.log('Filter changed:', filter); // For debugging
+    setCurrentFilter(filter);
   };
 
   return (
@@ -30,8 +46,17 @@ const Categories = () => {
         
         <main className="flex-1 p-6 space-y-6">
           <CategoriesHeader />
-          <CategoriesFilters viewMode={viewMode} onViewModeChange={handleViewModeChange} />
-          {viewMode === 'list' ? <CategoriesTable /> : <CategoriesGrid />}
+          <CategoriesFilters 
+            viewMode={viewMode} 
+            onViewModeChange={handleViewModeChange}
+            onFilterChange={handleFilterChange}
+            initialFilter={currentFilter}
+          />
+          {viewMode === 'list' ? (
+            <CategoriesTable filter={currentFilter} />
+          ) : (
+            <CategoriesGrid filter={currentFilter} />
+          )}
         </main>
       </div>
     </div>

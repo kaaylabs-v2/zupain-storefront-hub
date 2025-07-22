@@ -11,7 +11,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Category {
-  id: number;
+  id: string;
   name: string;
   status: boolean;
   products: number;

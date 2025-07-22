@@ -1,112 +1,47 @@
 
 import React from 'react';
-import { Calendar, User, CreditCard, Package, Download } from 'lucide-react';
+import { Calendar, User, CreditCard, Package, Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useOrders } from '@/hooks/useOrders';
+import { OrderFilter } from '@/utils/graphql';
 
 interface OrdersTimelineProps {
   activeFilter: string;
 }
 
 const OrdersTimeline = ({ activeFilter }: OrdersTimelineProps) => {
-  const allOrders = [
-    {
-      id: 'ORID0056',
-      customer: 'Jaya Khubani',
-      billDate: 'May 11, 2025 9:25 PM',
-      status: 'Cancelled',
-      paymentMethod: 'Cod',
-      amount: '₹749.00',
-      statusColor: 'bg-red-100 text-red-800',
-      timelineColor: 'bg-red-500',
-    },
-    {
-      id: 'ORID0055',
-      customer: 'Khushboo',
-      billDate: 'May 11, 2025 9:19 PM',
-      status: 'Delivered',
-      paymentMethod: 'Cod',
-      amount: '₹2,298.00',
-      statusColor: 'bg-green-100 text-green-800',
-      timelineColor: 'bg-green-500',
-    },
-    {
-      id: 'ORID0054',
-      customer: 'Sitaben',
-      billDate: 'May 11, 2025 12:40 PM',
-      status: 'Delivered',
-      paymentMethod: 'Cod',
-      amount: '₹850.00',
-      statusColor: 'bg-green-100 text-green-800',
-      timelineColor: 'bg-green-500',
-    },
-    {
-      id: 'ORID0053',
-      customer: 'Setu',
-      billDate: 'May 10, 2025 2:09 PM',
-      status: 'Delivered',
-      paymentMethod: 'Cod',
-      amount: '₹850.00',
-      statusColor: 'bg-green-100 text-green-800',
-      timelineColor: 'bg-green-500',
-    },
-    {
-      id: 'ORID0052',
-      customer: 'Mukesh Kumar',
-      billDate: 'May 10, 2025 1:54 PM',
-      status: 'Delivered',
-      paymentMethod: 'Cod',
-      amount: '₹850.00',
-      statusColor: 'bg-green-100 text-green-800',
-      timelineColor: 'bg-green-500',
-    },
-    {
-      id: 'ORID0051',
-      customer: 'Shital',
-      billDate: 'May 10, 2025 1:51 PM',
-      status: 'Delivered',
-      paymentMethod: 'Cod',
-      amount: '₹999.00',
-      statusColor: 'bg-green-100 text-green-800',
-      timelineColor: 'bg-green-500',
-    },
-    {
-      id: 'ORID0050',
-      customer: 'Kamlesh',
-      billDate: 'May 10, 2025 1:44 PM',
-      status: 'Delivered',
-      paymentMethod: 'Cod',
-      amount: '₹850.00',
-      statusColor: 'bg-green-100 text-green-800',
-      timelineColor: 'bg-green-500',
-    },
-    {
-      id: 'ORID0049',
-      customer: 'Khushboo',
-      billDate: 'May 9, 2025 12:18 PM',
-      status: 'Cancelled',
-      paymentMethod: 'Cod',
-      amount: '₹1.00',
-      statusColor: 'bg-red-100 text-red-800',
-      timelineColor: 'bg-red-500',
-    },
-    {
-      id: 'ORID0048',
-      customer: 'Khushboo',
-      billDate: 'April 27, 2025 5:43 PM',
-      status: 'Cancelled',
-      paymentMethod: 'Razorpay',
-      amount: '₹999.00',
-      statusColor: 'bg-red-100 text-red-800',
-      timelineColor: 'bg-red-500',
-    },
-  ];
+  // Helper function to map filter status to GraphQL type
+  const mapFilterStatus = (filter: string): OrderFilter['status'] | undefined => {
+    const statusMap: Record<string, OrderFilter['status']> = {
+      'pending': 'Pending',
+      'confirmed': 'Confirmed',
+      'in-packing': 'InPacking',
+      'dispatched': 'Dispatched',
+      'delivered': 'Delivered',
+      'cancelled': 'Cancelled',
+      'checkout': 'Checkout',
+      'cancel-request': 'CancelRequest'
+    };
+    return statusMap[filter.toLowerCase()];
+  };
 
-  // Filter orders based on active filter
-  const filteredOrders = activeFilter === 'all' 
-    ? allOrders 
-    : allOrders.filter(order => order.status.toLowerCase() === activeFilter.toLowerCase());
+  // Create filter object for GraphQL
+  const filter: OrderFilter = activeFilter !== 'all' ? { 
+    status: mapFilterStatus(activeFilter)
+  } : {};
+
+  // Use GraphQL hook for data fetching
+  const { orders, loading, error, refetch, usingMockData } = useOrders(
+    100, // Get more orders for timeline view
+    0,   // Start from beginning
+    filter
+  );
+
+  // Filter orders based on active filter (already handled by GraphQL filter, but keeping for consistency)
+  const filteredOrders = orders || [];
 
   // Group orders by date for timeline
   const groupedByDate = filteredOrders.reduce((acc, order) => {
@@ -116,18 +51,69 @@ const OrdersTimeline = ({ activeFilter }: OrdersTimelineProps) => {
     }
     acc[date].push(order);
     return acc;
-  }, {} as Record<string, typeof allOrders>);
+  }, {} as Record<string, typeof orders>);
 
   const dateKeys = Object.keys(groupedByDate).sort((a, b) => 
     new Date(b).getTime() - new Date(a).getTime()
   );
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div className="bg-white rounded-lg border p-8 flex items-center justify-center">
+          <div className="flex items-center space-x-2">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span className="text-gray-600">Loading timeline...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state (only show for real errors, not when using mock data)
+  if (error && !usingMockData) {
+    return (
+      <div className="space-y-8">
+        <Alert className="bg-red-50 border-red-200">
+          <AlertDescription className="text-red-800">
+            Failed to load orders timeline: {error}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={refetch}
+              className="ml-2"
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
+      {/* Mock Data Indicator */}
+      {usingMockData && (
+        <Alert className="bg-blue-50 border-blue-200">
+          <AlertDescription className="text-blue-800 text-sm">
+            📋 Currently displaying sample timeline data - GraphQL endpoint not connected
+          </AlertDescription>
+        </Alert>
+      )}
+
       {dateKeys.length === 0 ? (
         <div className="text-center py-12">
           <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-400" />
           <p className="text-gray-500 text-lg">No orders found for the selected filter.</p>
+          <Button 
+            variant="outline" 
+            onClick={refetch}
+            className="mt-4"
+          >
+            Refresh
+          </Button>
         </div>
       ) : (
         <div className="relative">

@@ -5,8 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useTheme } from '@/contexts/ThemeContext';
 import EditCategoryDrawer from './EditCategoryDrawer';
+import { useCategoriesSummary } from '@/hooks/useCategories';
+import { formatLastUpdated } from '@/lib/utils';
 
 const CategoriesHeader = () => {
+  const { summary, loading, error } = useCategoriesSummary();
+  console.log("summary",summary);
   const { currentPalette } = useTheme();
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
 
@@ -39,7 +43,7 @@ const CategoriesHeader = () => {
             <span>Live data</span>
           </div>
           <span>•</span>
-          <span>Last updated: 2 minutes ago</span>
+          <span>Last updated: {formatLastUpdated(summary.lastUpdated)}</span>
         </div>
       </div>
 
@@ -53,7 +57,7 @@ const CategoriesHeader = () => {
               </div>
               <div>
                 <p className="text-xs md:text-sm font-medium text-gray-600">Total Categories</p>
-                <p className="text-xl md:text-2xl font-bold text-gray-900">2</p>
+                <p className="text-xl md:text-2xl font-bold text-gray-900">{summary.total}</p>
               </div>
             </div>
           </CardContent>
@@ -67,7 +71,7 @@ const CategoriesHeader = () => {
               </div>
               <div>
                 <p className="text-xs md:text-sm font-medium text-gray-600">Active Categories</p>
-                <p className="text-xl md:text-2xl font-bold text-gray-900">2</p>
+                <p className="text-xl md:text-2xl font-bold text-gray-900">{summary.active}</p>
               </div>
             </div>
           </CardContent>
@@ -81,7 +85,7 @@ const CategoriesHeader = () => {
               </div>
               <div>
                 <p className="text-xs md:text-sm font-medium text-gray-600">Inactive Categories</p>
-                <p className="text-xl md:text-2xl font-bold text-gray-900">0</p>
+                <p className="text-xl md:text-2xl font-bold text-gray-900">{summary.inactive}</p>
               </div>
             </div>
           </CardContent>
@@ -95,7 +99,7 @@ const CategoriesHeader = () => {
               </div>
               <div>
                 <p className="text-xs md:text-sm font-medium text-gray-600">Total Products</p>
-                <p className="text-xl md:text-2xl font-bold text-gray-900">4</p>
+                <p className="text-xl md:text-2xl font-bold text-gray-900">{summary.totalProducts}</p>
               </div>
             </div>
           </CardContent>

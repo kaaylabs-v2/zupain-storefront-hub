@@ -162,6 +162,178 @@ export const SEARCH_PRODUCTS = `
   }
 `;
 
+// Orders GraphQL Queries
+export const GET_ORDERS = `
+  query Orders($limit: Int, $offset: Int) {
+    orders(limit: $limit, offset: $offset) {
+      data {
+        order_hdr_id
+        order_id
+        order_notes
+        order_price
+        creation_date
+        user {
+                user_uid
+                user_name
+                user_email
+                user_mobile
+            }
+        delivery_address {
+            state
+            city
+            address_line_2
+            address_line_1
+            pincode
+        }
+         order_details {
+                order_uid
+                product_uid
+        }
+        milestone {
+            milestone_description
+        }
+        order_payment {
+        payment_mode
+        transaction_uid
+        order_payment_id
+        payment_method {
+            method_name
+        }
+       }
+      }
+    }
+  }
+`;
+
+// export const GET_ORDERS = `
+//   query Orders($limit: Int, $offset: Int, $filter: OrderFilter) {
+//     orders(limit: $limit, offset: $offset, filter: $filter) {
+//       data {
+//         id
+//         customer {
+//           name
+//           email
+//           phone
+//         }
+//         billDate
+//         status
+//         paymentMethod
+//         amount
+//         currency
+//         items
+//         address {
+//           street
+//           city
+//           state
+//           postalCode
+//           country
+//         }
+//         trackingNumber
+//         notes
+//         createdAt
+//         updatedAt
+//       }
+//       pagination {
+//         total
+//         limit
+//         offset
+//         hasNextPage
+//         hasPreviousPage
+//       }
+//     }
+//   }
+// `;
+
+export const GET_ORDER_BY_ID = `
+  query GetOrderById($id: ID!) {
+    order(id: $id) {
+      id
+      customer {
+        name
+        email
+        phone
+      }
+      billDate
+      status
+      paymentMethod
+      amount
+      currency
+      items
+      address {
+        street
+        city
+        state
+        postalCode
+        country
+      }
+      trackingNumber
+      notes
+      orderItems {
+        id
+        product {
+          id
+          name
+          sku
+          image
+        }
+        quantity
+        price
+        total
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const GET_ORDERS_SUMMARY = `
+  query GetOrderStats {
+    orderStats {
+    success
+    data {
+      total
+      cancelled
+      checkout
+      confirmed
+      inPacking
+      delivered
+      dispatched
+      pending
+      cancelRequest
+      PreparingForDispatch
+    }
+    tenant_uid
+  }
+  }
+`;
+
+export const SEARCH_ORDERS = `
+  query SearchOrders($query: String!, $limit: Int, $offset: Int) {
+    searchOrders(query: $query, limit: $limit, offset: $offset) {
+      data {
+        id
+        customer {
+          name
+          email
+          phone
+        }
+        billDate
+        status
+        paymentMethod
+        amount
+        currency
+        items
+        createdAt
+      }
+      pagination {
+        total
+        limit
+        offset
+      }
+    }
+  }
+`;
+
 // TypeScript types for the GraphQL responses
 export interface Product {
   id: string;
@@ -228,6 +400,48 @@ export interface ProductFilter {
   };
 }
 
+// Order types
+export interface Order {
+  id: string;
+  customer: string;
+  billDate: string;
+  status: 'Pending' | 'Confirmed' | 'InPacking' | 'Dispatched' | 'Delivered' | 'Cancelled' | 'Checkout' | 'CancelRequest';
+  paymentMethod: string;
+  amount: string;
+  items: number;
+  address: string;
+  phone: string;
+  email: string;
+  statusColor: string;
+}
+
+export interface OrdersResponse {
+  orders: {
+    data: Order[];
+    pagination: {
+      total: number;
+      limit: number;
+      offset: number;
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+    };
+  };
+}
+
+export interface OrderFilter {
+  status?: 'Pending' | 'Confirmed' | 'InPacking' | 'Dispatched' | 'Delivered' | 'Cancelled' | 'Checkout' | 'CancelRequest';
+  paymentMethod?: string;
+  customer?: string;
+  amountRange?: {
+    min: number;
+    max: number;
+  };
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+}
+
 // GraphQL client configuration
 export const GRAPHQL_ENDPOINT = import.meta.env.VITE_GRAPHQL_ENDPOINT || 'https://api.example.com/graphql';
 
@@ -262,3 +476,131 @@ export const graphqlRequest = async (query: string, variables?: any) => {
     throw error;
   }
 }; 
+
+// Categories GraphQL Queries
+export const GET_CATEGORIES = `
+  query Categories($limit: Int, $offset: Int, $filter: CategoryFilterInput) {
+    categories(limit: $limit, offset: $offset, filter: $filter) {
+      data {
+        category_id
+        category_uid
+        category_name
+        is_active
+        banner_image
+        creation_date
+        modified_date
+        products_count
+      }
+      pagination {
+        total
+        limit
+        page
+        totalPages
+      }
+    }
+  }
+`;
+
+
+// query Categories($limit: Int, $offset: Int) {
+//   categories(limit: $limit, offset: $offset) {
+//     data {
+//       category_id
+//       category_uid
+//       category_name
+//       category_status
+//       product_count
+//       category_image
+//       created_at
+//       updated_at
+//     }
+//     pagination {
+//       total
+//       limit
+//       offset
+//       page
+//       totalPages
+//       hasNextPage
+//       hasPreviousPage
+//     }
+//   }
+// }
+
+export const GET_CATEGORY_BY_ID = `
+  query GetCategoryById($id: ID!) {
+    category(id: $id) {
+      id
+      name
+      status
+      products
+      image
+      description
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const GET_CATEGORIES_SUMMARY = `
+  query GetCategoriesSummary {
+    categoriesSummary {
+    data {
+      total           # Total categories
+      active          # Active categories  
+      inactive        # Inactive categories
+      totalProducts   # Total products across all categories
+      lastUpdated     # Last updated timestamp
+}
+    }
+  }
+`;
+
+export const SEARCH_CATEGORIES = `
+  query SearchCategories($query: String!, $limit: Int, $offset: Int) {
+    searchCategories(query: $query, limit: $limit, offset: $offset) {
+      data {
+        id
+        name
+        status
+        products
+        image
+      }
+      pagination {
+        total
+        limit
+        offset
+      }
+    }
+  }
+`;
+
+// Category types
+export interface Category {
+  id: string;
+  name: string;
+  status: boolean;
+  products: number;
+  image: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CategoriesResponse {
+  categories: {
+    data: Category[];
+    pagination: {
+      total: number;
+      limit: number;
+      page: number;
+      totalPages: number;
+    };
+  };
+}
+
+export interface CategoryFilter {
+  status?: boolean | null; // null for all, true for active, false for inactive
+  name?: string;
+  type?: string;
+  searchQuery?: string;
+} 

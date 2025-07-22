@@ -1,20 +1,56 @@
 import React, { useState } from 'react';
-import { Download, ArrowUpDown, Calendar, User, CreditCard, Package, Kanban, Clock, LayoutGrid, Eye, Edit3, Trash2, MessageSquare, Truck, ChevronDown, ChevronRight, Grid3X3, List, Filter } from 'lucide-react';
+import { Download, ArrowUpDown, Calendar, User, CreditCard, Package, Kanban, Clock, LayoutGrid, Eye, Edit3, Trash2, MessageSquare, Truck, ChevronDown, ChevronRight, Grid3X3, List, Filter, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import OrdersTimeline from './OrdersTimeline';
+import { useOrders, useOrdersSummary } from '@/hooks/useOrders';
+import { OrderFilter } from '@/utils/graphql';
 
 interface OrdersTableProps {
   activeFilter: string;
+  className?: string;
 }
 
-const OrdersTable = ({ activeFilter }: OrdersTableProps) => {
+const OrdersTable = ({ activeFilter, className }: OrdersTableProps) => {
   const [viewMode, setViewMode] = useState<'kanban' | 'timeline' | 'cards' | 'list'>('cards');
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
+
+  // Fetch orders summary for counts
+  const { summary, loading: summaryLoading } = useOrdersSummary();
+
+  // Helper function to map filter status to GraphQL type
+  const mapFilterStatus = (filter: string): OrderFilter['status'] | undefined => {
+    const statusMap: Record<string, OrderFilter['status']> = {
+      'pending': 'Pending',
+      'confirmed': 'Confirmed',
+      'in-packing': 'InPacking',
+      'dispatched': 'Dispatched',
+      'delivered': 'Delivered',
+      'cancelled': 'Cancelled',
+      'checkout': 'Checkout',
+      'cancel-request': 'CancelRequest'
+    };
+    return statusMap[filter.toLowerCase()];
+  };
+
+  // Create filter object for GraphQL
+  const filter: OrderFilter = activeFilter !== 'all' ? { 
+    status: mapFilterStatus(activeFilter)
+  } : {};
+
+  // Use GraphQL hook for data fetching
+  const { orders, loading, error, pagination, refetch, usingMockData } = useOrders(
+    itemsPerPage,
+    (currentPage - 1) * itemsPerPage,
+    filter
+  );
 
   const toggleOrderExpansion = (orderId: string) => {
     const newExpanded = new Set(expandedOrders);
@@ -26,125 +62,15 @@ const OrdersTable = ({ activeFilter }: OrdersTableProps) => {
     setExpandedOrders(newExpanded);
   };
 
-  const allOrders = [
-    {
-      id: 'ORID0056',
-      customer: 'Jaya Khubani',
-      billDate: 'May 11, 2025 9:25 PM',
-      status: 'Cancelled',
-      paymentMethod: 'Cod',
-      amount: '₹749.00',
-      statusColor: 'bg-red-100 text-red-800',
-      items: 3,
-      address: '123 Main Street, Mumbai, Maharashtra 400001',
-      phone: '+91 9876543210',
-      email: 'jaya.khubani@email.com'
-    },
-    {
-      id: 'ORID0055',
-      customer: 'Khushboo',
-      billDate: 'May 11, 2025 9:19 PM',
-      status: 'Delivered',
-      paymentMethod: 'Cod',
-      amount: '₹2,298.00',
-      statusColor: 'bg-green-100 text-green-800',
-      items: 5,
-      address: '456 Park Avenue, Delhi, Delhi 110001',
-      phone: '+91 9876543211',
-      email: 'khushboo@email.com'
-    },
-    {
-      id: 'ORID0054',
-      customer: 'Sitaben',
-      billDate: 'May 11, 2025 12:40 PM',
-      status: 'Delivered',
-      paymentMethod: 'Cod',
-      amount: '₹850.00',
-      statusColor: 'bg-green-100 text-green-800',
-      items: 2,
-      address: '789 Garden Road, Pune, Maharashtra 411001',
-      phone: '+91 9876543212',
-      email: 'sitaben@email.com'
-    },
-    {
-      id: 'ORID0053',
-      customer: 'Setu',
-      billDate: 'May 10, 2025 2:09 PM',
-      status: 'Delivered',
-      paymentMethod: 'Cod',
-      amount: '₹850.00',
-      statusColor: 'bg-green-100 text-green-800',
-      items: 2,
-      address: '321 Lake View, Bangalore, Karnataka 560001',
-      phone: '+91 9876543213',
-      email: 'setu@email.com'
-    },
-    {
-      id: 'ORID0052',
-      customer: 'Mukesh Kumar',
-      billDate: 'May 10, 2025 1:54 PM',
-      status: 'Delivered',
-      paymentMethod: 'Cod',
-      amount: '₹850.00',
-      statusColor: 'bg-green-100 text-green-800',
-      items: 2,
-      address: '654 Hill Station, Chennai, Tamil Nadu 600001',
-      phone: '+91 9876543214',
-      email: 'mukesh.kumar@email.com'
-    },
-    {
-      id: 'ORID0051',
-      customer: 'Shital',
-      billDate: 'May 10, 2025 1:51 PM',
-      status: 'Delivered',
-      paymentMethod: 'Cod',
-      amount: '₹999.00',
-      statusColor: 'bg-green-100 text-green-800',
-      items: 3,
-      address: '987 Valley Road, Hyderabad, Telangana 500001',
-      phone: '+91 9876543215',
-      email: 'shital@email.com'
-    },
-    {
-      id: 'ORID0050',
-      customer: 'Kamlesh',
-      billDate: 'May 10, 2025 1:44 PM',
-      status: 'Delivered',
-      paymentMethod: 'Cod',
-      amount: '₹850.00',
-      statusColor: 'bg-green-100 text-green-800',
-      items: 2,
-      address: '147 River Side, Kolkata, West Bengal 700001',
-      phone: '+91 9876543216',
-      email: 'kamlesh@email.com'
-    },
-    {
-      id: 'ORID0049',
-      customer: 'Khushboo',
-      billDate: 'May 9, 2025 12:18 PM',
-      status: 'Cancelled',
-      paymentMethod: 'Cod',
-      amount: '₹1.00',
-      statusColor: 'bg-red-100 text-red-800',
-      items: 1,
-      address: '456 Park Avenue, Delhi, Delhi 110001',
-      phone: '+91 9876543211',
-      email: 'khushboo@email.com'
-    },
-    {
-      id: 'ORID0048',
-      customer: 'Khushboo',
-      billDate: 'April 27, 2025 5:43 PM',
-      status: 'Cancelled',
-      paymentMethod: 'Razorpay',
-      amount: '₹999.00',
-      statusColor: 'bg-red-100 text-red-800',
-      items: 3,
-      address: '456 Park Avenue, Delhi, Delhi 110001',
-      phone: '+91 9876543211',
-      email: 'khushboo@email.com'
-    },
-  ];
+  // Handle page changes
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Reset current page when filter changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter]);
 
   const kanbanColumns = [
     { 
@@ -177,31 +103,94 @@ const OrdersTable = ({ activeFilter }: OrdersTableProps) => {
     },
   ];
 
-  const filteredOrders = activeFilter === 'all' 
-    ? allOrders 
-    : allOrders.filter(order => order.status.toLowerCase() === activeFilter.toLowerCase());
+  // Use orders from GraphQL hook (already filtered by the hook based on activeFilter)
+  const filteredOrders = orders || [];
 
   const groupedOrders = kanbanColumns.reduce((acc, column) => {
     acc[column.status] = filteredOrders.filter(order => order.status === column.status);
     return acc;
-  }, {} as Record<string, typeof allOrders>);
+  }, {} as Record<string, typeof orders>);
 
+  // Create dynamic filters array from summary data
   const filters = [
-    { id: 'all', label: 'All', count: 56, color: 'bg-blue-600' },
-    { id: 'pending', label: 'Pending', count: 10, color: 'bg-orange-500' },
-    { id: 'confirmed', label: 'Confirmed', count: 7, color: 'bg-green-600' },
-    { id: 'in-packing', label: 'In Packing', count: 0, color: 'bg-purple-500' },
-    { id: 'dispatched', label: 'Dispatched', count: 0, color: 'bg-blue-500' },
-    { id: 'delivered', label: 'Delivered', count: 7, color: 'bg-green-500' },
-    { id: 'cancelled', label: 'Cancelled', count: 0, color: 'bg-red-500' },
-    { id: 'checkout', label: 'Checkout', count: 30, color: 'bg-gray-500' },
-    { id: 'cancel-request', label: 'Cancel Request', count: 0, color: 'bg-yellow-500' },
+    { id: 'all', label: 'All', count: summary.total, color: 'bg-blue-600' },
+    { id: 'pending', label: 'Pending', count: summary.pending, color: 'bg-orange-500' },
+    { id: 'confirmed', label: 'Confirmed', count: summary.confirmed, color: 'bg-green-600' },
+    { id: 'in-packing', label: 'In Packing', count: summary.inPacking, color: 'bg-purple-500' },
+    { id: 'dispatched', label: 'Dispatched', count: summary.dispatched, color: 'bg-blue-500' },
+    { id: 'delivered', label: 'Delivered', count: summary.delivered, color: 'bg-green-500' },
+    { id: 'cancelled', label: 'Cancelled', count: summary.cancelled, color: 'bg-red-500' },
+    { id: 'checkout', label: 'Checkout', count: summary.checkout, color: 'bg-gray-500' },
+    { id: 'cancel-request', label: 'Cancel Request', count: summary.cancelRequest, color: 'bg-yellow-500' },
   ];
 
   const activeFilterData = filters.find(filter => filter.id === activeFilter) || filters[0];
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className={`space-y-6 ${className || ''}`}>
+        <div className="bg-white rounded-lg border p-8 flex items-center justify-center">
+          <div className="flex items-center space-x-2">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span className="text-gray-600">Loading orders...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state (only show for real errors, not when using mock data)
+  if (error && !usingMockData) {
+    return (
+      <div className={`space-y-6 ${className || ''}`}>
+        <Alert className="bg-red-50 border-red-200">
+          <AlertDescription className="text-red-800">
+            Failed to load orders: {error}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={refetch}
+              className="ml-2"
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  // Empty state
+  if (orders?.length === 0) {
+    return (
+      <div className={`space-y-6 ${className || ''}`}>
+        <div className="bg-white rounded-lg border p-8 text-center">
+          <Package className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+          <p className="text-gray-500">No orders found for the selected filter.</p>
+          <Button 
+            variant="outline" 
+            onClick={refetch}
+            className="mt-4"
+          >
+            Refresh
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${className || ''}`}>
+      {/* Mock Data Indicator */}
+      {usingMockData && (
+        <Alert className="bg-blue-50 border-blue-200">
+          <AlertDescription className="text-blue-800 text-sm">
+            📋 Currently displaying sample data - GraphQL endpoint not connected
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Enhanced Controls Container */}
       <Card className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 shadow-lg">
         <CardContent className="p-6">
@@ -488,8 +477,8 @@ const OrdersTable = ({ activeFilter }: OrdersTableProps) => {
                         <div>
                           <h4 className="font-semibold text-gray-700 mb-2">Customer Info</h4>
                           <div className="space-y-1 text-sm">
-                            <div>{order.email}</div>
-                            <div>{order.phone}</div>
+                            <div>{order?.email}</div>
+                            <div>{order?.phone}</div>
                             <div className="text-gray-600">{order.address}</div>
                           </div>
                         </div>
